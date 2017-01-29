@@ -26,13 +26,17 @@ class CommandWatcher
         'You need to provide a pollId :)'
       else
         response = Querier.get(poll_name: args[1])
-        response_string = "Poll: #{response['pollName']} (id: #{response['pollID']})"
-        response['options'].each do |option|
-          response_string += "\n#{option['name']} (##{option['order']}): \n"
-          option['voteCount'].times { response_string += "\u{25FC}" }
-          response_string += "(#{option['voteCount']}) \n"
+        if response['pollName']
+          response_string = "Poll: #{response['pollName']} (id: #{response['pollID']})"
+          response['options'].each do |option|
+            response_string += "\n#{option['name']} (##{option['order']}): \n"
+            option['voteCount'].times { response_string += "\u{25FC}" }
+            response_string += "(#{option['voteCount']}) \n"
+          end
+          response_string
+        else
+          'A poll with this id does not exist'
         end
-        response_string
       end
     elsif args[0].include?('/create')
       poll_name = args[1]
