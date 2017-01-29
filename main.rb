@@ -12,7 +12,7 @@ Telegram::Bot::Client.run(token) do |bot|
       response_message = 'sorry, something went wrong'
 
       args = text.split(' ')
-      if args[0] == ('/vote')
+      if args[0].include?('/vote')
         poll_id = args[1]
         choice = args[2]
 
@@ -36,7 +36,7 @@ Telegram::Bot::Client.run(token) do |bot|
         rescue => e
           puts "failed #{e}"
         end
-      elsif args[0] == '/start'
+      elsif args[0].include?('/start')
         response_message = 'you got it'
       else
         response_message = 'unrecognized command'
