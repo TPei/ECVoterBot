@@ -28,7 +28,9 @@ class CommandWatcher
         response = Querier.get(poll_name: args[1])
         response_string = "Poll: #{response['pollName']} (id: #{response['pollID']})"
         response['options'].each do |option|
-          response_string += "\n#{option['name']}: #{option['voteCount']}"
+          response_string += "\n#{option['name']}: \n"
+          option['voteCount'].times { response_string += "\u{25FC}" }
+          response_string += "(#{option['voteCount']}) \n"
         end
         response_string
       end
