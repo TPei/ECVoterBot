@@ -32,6 +32,15 @@ class CommandWatcher
         end
         response_string
       end
+    elsif args[0].include?('/create')
+      poll_name = args[1]
+      option_names = args[2..-1]
+
+      if poll_name.nil? || option_names.nil? || option_names.empty?
+        "You need to provide a poll name and poll option names!"
+      else
+        Querier.post(poll_name: poll_name, choices: option_names)
+      end
     elsif args[0].include?('/start')
       'You got it!'
     else
