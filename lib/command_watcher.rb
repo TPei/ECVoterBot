@@ -23,7 +23,7 @@ class CommandWatcher
     elsif args[0].include?('/info')
       poll_name = args[1]
       if poll_name.nil?
-        'Tell me which poll'
+        'You need to provide a pollId :)'
       else
         response = Querier.get(poll_name: args[1])
         response_string = "Poll: #{response['pollName']} (id: #{response['pollID']})"
