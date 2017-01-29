@@ -18,7 +18,7 @@ class Querier
     Unirest.timeout(60)
     url += "&pollname=#{poll_name}"
     choices.each_with_index do |choice, index|
-      url += "&option#{index}=#{choice}"
+      url += "&option#{index+1}=#{choice}"
     end
 
     begin
