@@ -6,7 +6,7 @@ class Querier
   def self.post(poll_name:, choice_name:, sender:)
     body = { 'Body': "#{poll_name}+#{choice_name}", 'From': sender }
 
-    url = ENV['FUNCTION_URL']
+    url = ENV['POST_URL']
 
     begin
       Unirest.timeout(60) # for initial function starting
@@ -25,5 +25,15 @@ class Querier
       puts "failed #{e}"
       return 500
     end
+  end
+
+  def self.get(poll_name:)
+    url = ENV['GET_URL']
+    response = Unirest.get("#{url}&pollID=#{poll_name}")
+    puts response.inspect
+    response.body
+  rescue => e
+    puts "failed #{e}"
+    'error'
   end
 end

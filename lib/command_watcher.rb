@@ -20,6 +20,18 @@ class CommandWatcher
           'Sorry, something went wrong.'
         end
       end
+    elsif args[0].include?('/info')
+      poll_name = args[1]
+      if poll_name.nil?
+        'Tell me which poll'
+      else
+        response = Querier.get(poll_name: args[1])
+        response_string = "Poll: #{response['pollName']} (id: #{response['pollID']})"
+        response['options'].each do |option|
+          response_string += "\n#{option['name']}: #{option['voteCount']}"
+        end
+        response_string
+      end
     elsif args[0].include?('/start')
       'You got it!'
     else
