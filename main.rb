@@ -8,8 +8,12 @@ token = ENV['BOT_TOKEN']
 Telegram::Bot::Client.run(token) do |bot|
   bot.listen do |message|
     if message.text
-      response_message = CommandWatcher.handle(message)
-      bot.api.send_message(chat_id: message.chat.id, text: response_message)
+      begin
+        response_message = CommandWatcher.handle(message)
+        bot.api.send_message(chat_id: message.chat.id, text: response_message)
+      rescue => e
+        puts "failed #{e}"
+      end
     end
   end
 end
