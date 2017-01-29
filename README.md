@@ -1,2 +1,2 @@
 # Voter Bot
-send /vote pollId choice to vote
+send `/vote pollName choiceName` to vote
