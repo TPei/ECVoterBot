@@ -13,28 +13,32 @@ Telegram::Bot::Client.run(token) do |bot|
 
       args = text.split(' ')
       if args[0].include?('/vote')
-        poll_id = args[1]
-        choice = args[2]
+        poll_name = args[1]
+        choice_name = args[2]
+        if choice_name.nil? || poll_name.nil?
+          response_message = 'Vote expects a poll name and choice name :)'
+        else
 
-        body = { 'Body': "#{poll_id}+#{choice}", 'From': message.from.id }
+          body = { 'Body': "#{poll_name}+#{choice_name}", 'From': message.from.id }
 
-        url = ENV['FUNCTION_URL']
+          url = ENV['FUNCTION_URL']
 
-        begin
-          Unirest.timeout(60) # for initial function starting
-          response = Unirest.post(
-            url,
-            headers: {
-              'Accept' => 'application/json',
-              'x-twilio-signature' => 'totally'
-            },
-            parameters: body
-          )
+          begin
+            Unirest.timeout(60) # for initial function starting
+            response = Unirest.post(
+              url,
+              headers: {
+                'Accept' => 'application/json',
+                'x-twilio-signature' => 'totally'
+              },
+              parameters: body
+            )
 
-          puts response
-          response_message = 'all done' if response.code == 200
-        rescue => e
-          puts "failed #{e}"
+            puts response
+            response_message = 'I submitted your vote' if response.code == 200
+          rescue => e
+            puts "failed #{e}"
+          end
         end
       elsif args[0].include?('/start')
         response_message = 'you got it'
