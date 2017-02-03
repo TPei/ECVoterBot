@@ -3,19 +3,25 @@ Dotenv.load
 require 'unirest'
 
 class Querier
-  def self.post(poll_name:, choices: nil, choice_name: nil, sender: nil)
-    if choices
-      post_poll(poll_name, choices)
-    elsif choice_name
-      post_vote(poll_name, choice_name, sender)
-    end
+  def initialize
+    Unirest.timeout(60) # initial function startup takes looong
   end
 
-  def self.post_poll(poll_name, choices)
+  def self.post_poll(poll_name:, choices:)
+    self.new.post_poll(poll_name: poll_name, choices: choices)
+  end
+
+  def self.post_vote(poll_name:, choice_name:, sender:)
+    self.new.post_vote(poll_name: poll_name, choice_name: choice_name, sender: sender)
+  end
+
+  def self.get(poll_name:)
+    self.new.get(poll_name: poll_name)
+  end
+
+  def post_poll(poll_name:, choices:)
     url = ENV['POST_POLL_URL']
 
-
-    Unirest.timeout(60)
     url += "&pollname=#{poll_name}"
     choices.each_with_index do |choice, index|
       url += "&option#{index+1}=#{choice}"
@@ -26,46 +32,61 @@ class Querier
       puts response.inspect
       if response.code == 200
         msg = response.body.split(">")[1].split("<")[0]
-        msg
+        respond(code: 200, message: msg)
       else
-        'Something went wrong'
+        respond(code: 500, 'Something went wrong')
       end
     rescue => e
-      'Something went wrong'
+      respond(code: 500, 'Something went wrong')
     end
   end
 
-  def self.post_vote(poll_name, choice_name, sender)
+  def post_vote(poll_name:, choice_name:, sender:)
     body = { 'Body': "#{poll_name}+#{choice_name}", 'From': sender }
 
     url = ENV['POST_URL']
 
     begin
-      Unirest.timeout(60) # for initial function starting
-      response = Unirest.post(
-        url,
-        headers: {
-          'Accept' => 'application/json',
-          'x-twilio-signature' => 'totally'
-        },
-        parameters: body
-      )
+      response = Unirest.post(url, headers: headers, parameters: body)
 
       puts response.inspect
-      return response.code
+      respond(code: reponse.code, message: 'Vote submitted')
     rescue => e
       puts "failed #{e}"
-      return 500
+      respond(code: 500, message: 'Something went wrong')
     end
   end
 
-  def self.get(poll_name:)
+  def get(poll_name:)
     url = ENV['GET_URL']
     response = Unirest.get("#{url}&pollID=#{poll_name}")
     puts response.inspect
-    response.body
+    if response.body['pollName']
+      response_string = "Poll: #{response.body['pollName']} (id: #{response.body['pollID']})"
+      response['options'].each do |option|
+        response_string += "\n#{option['name']} (##{option['order']}): \n"
+        option['voteCount'].times { response_string += "\u{25FC}" }
+        response_string += "(#{option['voteCount']}) \n"
+      end
+      respond(code: 200, message: response_string)
+    else
+      respond(code: 404, message: 'A poll with this id does not exist.'
+    end
   rescue => e
     puts "failed #{e}"
-    'error'
+    respond(code: 500, message: 'Something went wrong.'
+  end
+
+  private
+
+  def headers
+    {
+      'Accept' => 'application/json',
+      'x-twilio-signature' => 'totally'
+    }
+  end
+
+  def respond(code:, message:)
+    { code: code, message: message }
   end
 end
