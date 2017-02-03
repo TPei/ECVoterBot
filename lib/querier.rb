@@ -5,6 +5,7 @@ require 'unirest'
 class Querier
   def initialize
     Unirest.timeout(60) # initial function startup takes looong
+    @log = Logger.new(STDOUT)
   end
 
   def self.post_poll(poll_name:, choices:)
@@ -29,7 +30,7 @@ class Querier
 
     begin
       response = Unirest.get(url)
-      puts response.inspect
+      log.info response.inspect
       if response.code == 200
         msg = response.body.split(">")[1].split("<")[0]
         respond(code: 200, message: msg)
@@ -37,6 +38,7 @@ class Querier
         respond(code: 500, 'Something went wrong')
       end
     rescue => e
+      log.fatal "failed #{e}"
       respond(code: 500, 'Something went wrong')
     end
   end
@@ -49,10 +51,10 @@ class Querier
     begin
       response = Unirest.post(url, headers: headers, parameters: body)
 
-      puts response.inspect
+      log.info response.inspect
       respond(code: reponse.code, message: 'Vote submitted')
     rescue => e
-      puts "failed #{e}"
+      log.fatal "failed #{e}"
       respond(code: 500, message: 'Something went wrong')
     end
   end
@@ -60,7 +62,7 @@ class Querier
   def get(poll_name:)
     url = ENV['GET_URL']
     response = Unirest.get("#{url}&pollID=#{poll_name}")
-    puts response.inspect
+    log.info response.inspect
     if response.body['pollName']
       response_string = "Poll: #{response.body['pollName']} (id: #{response.body['pollID']})"
       response['options'].each do |option|
@@ -73,11 +75,13 @@ class Querier
       respond(code: 404, message: 'A poll with this id does not exist.'
     end
   rescue => e
-    puts "failed #{e}"
+    log.fatal "failed #{e}"
     respond(code: 500, message: 'Something went wrong.'
   end
 
   private
+
+  attr_reader :log
 
   def headers
     {
